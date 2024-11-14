@@ -44,7 +44,7 @@ class ApplicationAddUserIT {
         long userId = 3L;
         long subscriberId = 4L;
 
-        AuthClientStub.stubAuthCall(subscriberId);
+        AuthClientStub.stubAuthCallResponseTrue(subscriberId);
 
         RestAssured.given()
                 .when()
@@ -61,7 +61,7 @@ class ApplicationAddUserIT {
         long userId = 2L;
         long subscriberId = 5L;
 
-        AuthClientStub.stubAuthCall(subscriberId);
+        AuthClientStub.stubAuthCallResponseTrue(subscriberId);
 
         RestAssured.given()
                 .when()
@@ -78,7 +78,7 @@ class ApplicationAddUserIT {
         long userId = 1L;
         long subscriberId = 2L;
 
-        AuthClientStub.stubAuthCall(subscriberId);
+        AuthClientStub.stubAuthCallResponseTrue(subscriberId);
 
         RestAssured.given()
                 .when()
@@ -95,7 +95,7 @@ class ApplicationAddUserIT {
         long userId = 6L;
         long subscriberId = 9L;
 
-        AuthClientStub.stubAuthCall(subscriberId);
+        AuthClientStub.stubAuthCallResponseTrue(subscriberId);
 
         RestAssured.given()
                 .when()
@@ -104,5 +104,40 @@ class ApplicationAddUserIT {
                 .statusCode(200)
                 .body("message", Matchers.notNullValue())
                 .body("message", Matchers.equalTo("Вы уже отправили заявку в друзья!"));
+    }
+
+    @Test
+    void userNotFoundException() {
+
+        long userId = 6L;
+        long subscriberId = 9L;
+
+        AuthClientStub.stubAuthCallResponseFalse(subscriberId);
+
+        RestAssured.given()
+                .when()
+                .post(String.format("/api/v1/%d/%d", userId, subscriberId))
+                .then()
+                .statusCode(400)
+                .body("message", Matchers.notNullValue())
+                .body("message", Matchers.equalTo(String.format("Пользователь с ид %d не найден!", subscriberId)));
+
+    }
+
+    @Test
+    void invalidRequestParameterException() {
+
+        long userId = 9L;
+        long subscriberId = 9L;
+
+        AuthClientStub.stubAuthCallResponseTrue(subscriberId);
+
+        RestAssured.given()
+                .when()
+                .post(String.format("/api/v1/%d/%d", userId, subscriberId))
+                .then()
+                .statusCode(400)
+                .body("message", Matchers.notNullValue())
+                .body("message", Matchers.equalTo("Нельзя добавить самого себя в друзья!"));
     }
 }

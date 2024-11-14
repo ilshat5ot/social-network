@@ -38,12 +38,12 @@ public class FriendServiceImpl implements FriendService {
 
         boolean userExists = authClient.userIsExists(subscriberId);
 
-        if (!userExists) {
-            throw new UserNotFoundException(String.format(localizationExceptionMessage.getUserNotFound(), subscriberId));
-        }
-
         if (userId == subscriberId) {
             throw new InvalidRequestParameterException(localizationExceptionMessage.getAddYourselfExc());
+        }
+
+        if (!userExists) {
+            throw new UserNotFoundException(String.format(localizationExceptionMessage.getUserNotFound(), subscriberId));
         }
 
         String message;
