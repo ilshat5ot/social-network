@@ -2,15 +2,19 @@ package ru.sadykov.friendservice.friend.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.sadykov.friendservice.friend.client.AuthClient;
 import ru.sadykov.friendservice.friend.entity.Friend;
 import ru.sadykov.friendservice.friend.entity.Status;
 import ru.sadykov.friendservice.friend.exception.InvalidRequestParameterException;
+import ru.sadykov.friendservice.friend.exception.UserNotFoundException;
 import ru.sadykov.friendservice.friend.exception.localization.LocalizationExceptionMessage;
 import ru.sadykov.friendservice.friend.factory.FriendFactory;
 import ru.sadykov.friendservice.friend.finder.FriendFinder;
 import ru.sadykov.friendservice.friend.handler.ResponseMessageHandler;
-import ru.sadykov.friendservice.friend.responsemessage.localization.LocalizationResponseMessage;
 import ru.sadykov.friendservice.friend.repository.FriendRepository;
+import ru.sadykov.friendservice.friend.responsemessage.localization.LocalizationResponseMessage;
+import ru.sadykov.friendservice.friend.service.dto.FriendResponseDto;
+import ru.sadykov.friendservice.friend.updater.FriendUpdater;
 
 import java.util.Optional;
 
@@ -22,19 +26,27 @@ public class FriendServiceImpl implements FriendService {
     private final FriendFactory friendFactory;
     private final FriendRepository friendRepository;
     private final ResponseMessageHandler responseMessageHandler;
+    private final FriendUpdater friendUpdater;
 
     private final LocalizationExceptionMessage localizationExceptionMessage;
     private final LocalizationResponseMessage localizationResponseMessage;
 
-    @Override
-    public String addFriend(long userId, long subscriberId) {
+    private final AuthClient authClient;
 
-        // TODO check exist user
-        String message;
+    @Override
+    public FriendResponseDto addFriend(long userId, long subscriberId) {
+
+        boolean userExists = authClient.userIsExists(subscriberId);
+
+        if (!userExists) {
+            throw new UserNotFoundException(String.format(localizationExceptionMessage.getUserNotFound(), subscriberId));
+        }
 
         if (userId == subscriberId) {
             throw new InvalidRequestParameterException(localizationExceptionMessage.getAddYourselfExc());
         }
+
+        String message;
 
         Optional<Friend> friendOptional = friendFinder.findFriend(userId, subscriberId);
 
@@ -56,16 +68,13 @@ public class FriendServiceImpl implements FriendService {
 
             Optional<String> responseResult = responseMessageHandler.handle(friend, subscriberId);
 
-            message = responseResult.orElseGet(() -> saveFriend(friend));
+            message = responseResult.orElseGet(() -> {
+                friendUpdater.update(friend, Status.FRIEND);
+                return localizationResponseMessage.getAreYouFriend();
+            });
         }
 
-        return message;
-    }
-
-    private String saveFriend(Friend friend) {
-        friend.setStatus(Status.FRIEND);
-        friendRepository.save(friend);
-        return localizationResponseMessage.getAreYouFriend();
+        return new FriendResponseDto(message);
     }
 }
 

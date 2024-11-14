@@ -13,10 +13,12 @@ public class LocalizationExceptionMessage {
     private final Locale locale;
 
     private final String addYourselfExc;
+    private final String userNotFound;
 
     public LocalizationExceptionMessage() {
         this.locale = Locale.getDefault();
 
         this.addYourselfExc = ms.getMessage("add.yourself");
+        this.userNotFound = ms.getMessage("user.not.found");
     }
 }

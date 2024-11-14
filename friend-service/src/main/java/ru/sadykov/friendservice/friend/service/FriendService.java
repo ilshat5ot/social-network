@@ -1,6 +1,8 @@
 package ru.sadykov.friendservice.friend.service;
 
+import ru.sadykov.friendservice.friend.service.dto.FriendResponseDto;
+
 public interface FriendService {
 
-    String addFriend(long userId, long subscriberId);
+    FriendResponseDto addFriend(long userId, long subscriberId);
 }

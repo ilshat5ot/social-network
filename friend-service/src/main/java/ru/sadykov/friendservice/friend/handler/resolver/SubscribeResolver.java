@@ -19,7 +19,7 @@ public class SubscribeResolver implements ResponseMessageResolver {
 
         Optional<String> msg = Optional.empty();
 
-        if (Status.SUBSCRIBER.equals(friend.getStatus()) && friend.getUserId().equals(subscriberId)) {
+        if (Status.SUBSCRIBER.equals(friend.getStatus()) && friend.getSubscriberId().equals(subscriberId)) {
             msg = Optional.of(localizationResponseMessage.getRequestAlreadySent());
         }
 
