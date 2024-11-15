@@ -173,7 +173,7 @@
                         <exclude>**/entity/**</exclude>
                         <exclude>**/mapper/**</exclude>
                         <exclude>**/repository/**</exclude>
-                        <exclude>**/Application.java</exclude>
+                        <exclude>**/FriendServiceApplication*</exclude>
                     </excludes>
                 </configuration>
             </plugin>
