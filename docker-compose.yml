@@ -1,0 +1,13 @@
+version: '3.9'
+services:
+  keycloak-postgres:
+    container_name: friend-postgres
+    image: postgres:14
+    volumes:
+      - ./volume-data/postgres_follower_data:/var/lib/postgresql/data
+    ports:
+      - "5332:5432"
+    environment:
+      POSTGRES_DB: friend_db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
