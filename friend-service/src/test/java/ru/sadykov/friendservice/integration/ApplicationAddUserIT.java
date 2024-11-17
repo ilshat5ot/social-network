@@ -58,8 +58,8 @@ class ApplicationAddUserIT {
     @Test
     void youAreFriend() {
 
-        long userId = 2L;
-        long subscriberId = 5L;
+        long userId = 5L;
+        long subscriberId = 2L;
 
         AuthClientStub.stubAuthCallResponseTrue(subscriberId);
 
@@ -92,8 +92,8 @@ class ApplicationAddUserIT {
     @Test
     void requestAlreadySent() {
 
-        long userId = 6L;
-        long subscriberId = 9L;
+        long userId = 9L;
+        long subscriberId = 6L;
 
         AuthClientStub.stubAuthCallResponseTrue(subscriberId);
 
