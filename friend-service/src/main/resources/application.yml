@@ -1,9 +1,10 @@
 server:
-  port: 8081
+  port: 8000
 
 spring:
   application:
     name: friend-service
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5332/friend_db
@@ -23,13 +24,9 @@ spring:
       default-topic: friendship-notification
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
-#    spring.kafka.bootstrap-servers=localhost:9092
-#    spring.kafka.template.default-topic=order-placed
-#    spring.kafka.producer.key-serializer=org.apache.kafka.common.serialization.StringSerializer
-#    spring.kafka.producer.value-serializer=io.confluent.kafka.serializers.KafkaAvroSerializer
-#    spring.kafka.producer.properties.schema.registry.url=http://127.0.0.1:8085
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8085
 
 auth-service-url: http://localhost:8082
 
