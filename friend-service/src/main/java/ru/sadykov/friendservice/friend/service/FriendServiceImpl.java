@@ -1,10 +1,14 @@
 package ru.sadykov.friendservice.friend.service;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.kafka.common.protocol.types.Field;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import ru.sadykov.friendservice.friend.client.AuthClient;
 import ru.sadykov.friendservice.friend.entity.Friend;
 import ru.sadykov.friendservice.friend.entity.Status;
+import ru.sadykov.friendservice.friend.event.AddFriendEvent;
 import ru.sadykov.friendservice.friend.exception.InvalidRequestParameterException;
 import ru.sadykov.friendservice.friend.exception.UserNotFoundException;
 import ru.sadykov.friendservice.friend.exception.localization.LocalizationExceptionMessage;
@@ -18,6 +22,7 @@ import ru.sadykov.friendservice.friend.updater.FriendUpdater;
 
 import java.util.Optional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class FriendServiceImpl implements FriendService {
@@ -27,6 +32,7 @@ public class FriendServiceImpl implements FriendService {
     private final FriendRepository friendRepository;
     private final ResponseMessageHandler responseMessageHandler;
     private final FriendUpdater friendUpdater;
+    private final KafkaTemplate<String, AddFriendEvent> kafkaTemplate;
 
     private final LocalizationExceptionMessage localizationExceptionMessage;
     private final LocalizationResponseMessage localizationResponseMessage;
@@ -36,15 +42,15 @@ public class FriendServiceImpl implements FriendService {
     @Override
     public FriendResponseDto addFriend(long userId, long subscriberId) {
 
-        boolean userExists = authClient.userIsExists(subscriberId);
+//        boolean userExists = authClient.userIsExists(subscriberId);
 
         if (userId == subscriberId) {
             throw new InvalidRequestParameterException(localizationExceptionMessage.getAddYourselfExc());
         }
 
-        if (!userExists) {
-            throw new UserNotFoundException(String.format(localizationExceptionMessage.getUserNotFound(), subscriberId));
-        }
+//        if (!userExists) {
+//            throw new UserNotFoundException(String.format(localizationExceptionMessage.getUserNotFound(), subscriberId));
+//        }
 
         String message;
 
@@ -69,7 +75,14 @@ public class FriendServiceImpl implements FriendService {
             Optional<String> responseResult = responseMessageHandler.handle(friend, subscriberId);
 
             message = responseResult.orElseGet(() -> {
-                friendUpdater.update(friend, Status.FRIEND);
+                Friend update = friendUpdater.update(friend, Status.FRIEND);
+
+                AddFriendEvent addFriendEvent = new AddFriendEvent(update.getSubscriberId(),"You add friend");
+
+                log.info("Start - Sending AddFriendEvent {} to Kafka topic friendship-notification", addFriendEvent);
+                kafkaTemplate.send("friendship-notification", addFriendEvent);
+                log.info("End - Sending AddFriendEvent {} to Kafka topic friendship-notification", addFriendEvent);
+
                 return localizationResponseMessage.getAreYouFriend();
             });
         }
