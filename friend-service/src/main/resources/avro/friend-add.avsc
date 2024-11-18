@@ -1,0 +1,9 @@
+{
+    "type": "record",
+    "name": "FriendAddEvent",
+    "namespace": "ru.sadykov.socialnetwork.friend.event",
+    "fields": [
+      { "name": "userId", "type": "long" },
+      { "name": "message", "type": "string" }
+    ]
+}
