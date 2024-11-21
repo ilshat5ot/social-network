@@ -25,6 +25,7 @@
 
     <modules>
         <module>friend-service</module>
+        <module>notification-service</module>
     </modules>
 
     <dependencyManagement>

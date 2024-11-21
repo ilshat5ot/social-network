@@ -1,9 +1,10 @@
 server:
-  port: 8081
+  port: 8000
 
 spring:
   application:
     name: friend-service
+
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5332/friend_db
@@ -17,4 +18,15 @@ spring:
   liquibase:
     change-log: db/root-changelog.xml
 
+  kafka:
+    bootstrap-servers: localhost:9092
+    template:
+      default-topic: friendship-notification
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      properties:
+        schema.registry.url: http://localhost:8085
+
 auth-service-url: http://localhost:8082
+

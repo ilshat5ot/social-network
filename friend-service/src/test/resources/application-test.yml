@@ -1,1 +1,7 @@
 auth-service-url: http://localhost:${wiremock.server.port}
+
+spring:
+  kafka:
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
