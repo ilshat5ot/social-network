@@ -76,17 +76,16 @@ public class FriendServiceImpl implements FriendService {
             Optional<String> responseResult = responseMessageHandler.handle(friend, subscriberId);
 
             message = responseResult.orElseGet(() -> {
-                Friend update = friendUpdater.update(friend, Status.FRIEND);
-
-                FriendAddEvent addFriendEvent = new FriendAddEvent(update.getSubscriberId(), "You add friend");
-
-                log.info("Start - Sending AddFriendEvent {} to Kafka topic friendship-notification", addFriendEvent);
-                kafkaTemplate.send("friendship-notification", addFriendEvent);
-                log.info("End - Sending AddFriendEvent {} to Kafka topic friendship-notification", addFriendEvent);
-
+                friendUpdater.update(friend, Status.FRIEND);
                 return localizationResponseMessage.getAreYouFriend();
             });
         }
+
+        FriendAddEvent addFriendEvent = new FriendAddEvent(userId, subscriberId, message);
+
+        log.info("Start - Sending AddFriendEvent {} to Kafka topic friendship-notification", addFriendEvent);
+        kafkaTemplate.send("friendship-notification", addFriendEvent);
+        log.info("End - Sending AddFriendEvent {} to Kafka topic friendship-notification", addFriendEvent);
 
         return new FriendResponseDto(message);
     }
