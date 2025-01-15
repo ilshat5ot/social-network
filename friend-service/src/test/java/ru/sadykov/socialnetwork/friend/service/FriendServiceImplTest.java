@@ -54,18 +54,16 @@ class FriendServiceImplTest {
     @Spy
     private LocalizationResponseMessage localizationResponseMessage;
 
-
     @Test
     void createNewFollower() {
         long userId = 1L;
         long subscriberId = 2L;
         String expected = localizationResponseMessage.getYouAreSub();
 
-        when(authClient.userIsExists(subscriberId)).thenReturn(true);
         when(friendFinder.findFriend(userId, subscriberId)).thenReturn(Optional.empty());
         when(friendRepository.save(any())).thenReturn(getForCreation());
 
-        FriendResponseDto friendResponseDto = friendService.addFriend(userId, subscriberId);
+        FriendResponseDto friendResponseDto = friendService.add(userId, subscriberId);
 
         assertEquals(expected, friendResponseDto.message());
         verify(friendFinder, times(1)).findFriend(userId, subscriberId);
@@ -79,11 +77,10 @@ class FriendServiceImplTest {
 
         String excepted = localizationResponseMessage.getAreYouFriend();
 
-        when(authClient.userIsExists(userId)).thenReturn(true);
         when(friendFinder.findFriend(subscriberId, userId)).thenReturn(Optional.of(getForAddFriend()));
-        when(friendUpdater.update(any(), any())).thenReturn(getForAddFriendStatusFriend());
+        when(friendUpdater.update(any(), any())).thenReturn(getForAreYouFriend());
 
-        FriendResponseDto friendResponseDto = friendService.addFriend(subscriberId, userId);
+        FriendResponseDto friendResponseDto = friendService.add(subscriberId, userId);
 
         assertEquals(excepted, friendResponseDto.message());
     }
@@ -92,15 +89,14 @@ class FriendServiceImplTest {
     void youAreFriend() {
         long userId = 1L;
         long subscriberId = 2L;
-        Friend friend = getForYouAreFriend();
+        Friend friend = getForAlredyFriend();
 
         String excepted = localizationResponseMessage.getAlreadyFriend();
 
-        when(authClient.userIsExists(subscriberId)).thenReturn(true);
         when(friendFinder.findFriend(userId, subscriberId)).thenReturn(Optional.of(friend));
         when(responseMessageHandler.handle(friend, subscriberId)).thenReturn(Optional.of(excepted));
 
-        FriendResponseDto friendResponseDto = friendService.addFriend(userId, subscriberId);
+        FriendResponseDto friendResponseDto = friendService.add(userId, subscriberId);
 
         assertEquals(excepted, friendResponseDto.message());
     }
@@ -113,11 +109,10 @@ class FriendServiceImplTest {
 
         String excepted = localizationResponseMessage.getRequestAlreadySent();
 
-        when(authClient.userIsExists(subscriberId)).thenReturn(true);
         when(friendFinder.findFriend(userId, subscriberId)).thenReturn(Optional.of(friend));
         when(responseMessageHandler.handle(friend, subscriberId)).thenReturn(Optional.of(excepted));
 
-        FriendResponseDto friendResponseDto = friendService.addFriend(userId, subscriberId);
+        FriendResponseDto friendResponseDto = friendService.add(userId, subscriberId);
 
         assertEquals(excepted, friendResponseDto.message());
     }
@@ -127,7 +122,6 @@ class FriendServiceImplTest {
         long userId = 1L;
         long subscriberId = 1L;
 
-        when(authClient.userIsExists(subscriberId)).thenReturn(true);
         assertThrows(InvalidRequestParameterException.class, () -> friendService.addFriend(userId, subscriberId));
     }
 
@@ -149,7 +143,7 @@ class FriendServiceImplTest {
         return friend;
     }
 
-    private Friend getForAddFriendStatusFriend() {
+    private Friend getForAreYouFriend() {
         Friend friend = new Friend();
         friend.setUserId(1L);
         friend.setSubscriberId(2L);
@@ -158,7 +152,7 @@ class FriendServiceImplTest {
         return friend;
     }
 
-    private Friend getForYouAreFriend() {
+    private Friend getForAlredyFriend() {
         Friend friend = new Friend();
         friend.setUserId(1L);
         friend.setSubscriberId(2L);

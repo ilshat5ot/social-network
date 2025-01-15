@@ -40,16 +40,15 @@ public class FriendServiceImpl implements FriendService {
     private final LocalizationResponseMessage localizationResponseMessage;
 
     private final AuthClient authClient;
-
     private FriendServiceImpl friendServiceImpl;
 
     @Override
     public FriendResponseDto addFriend(long userId, long subscriberId) {
-        boolean userExists = authClient.userIsExists(subscriberId);
-
         if (userId == subscriberId) {
             throw new InvalidRequestParameterException(localizationExceptionMessage.getAddYourselfExc());
         }
+
+        boolean userExists = authClient.userIsExists(subscriberId);
 
         if (!userExists) {
             throw new UserNotFoundException(String.format(localizationExceptionMessage.getUserNotFound(), subscriberId));
