@@ -4,7 +4,14 @@ server:
 spring:
   application:
     name: friend-service
-
+  cache:
+    type: redis
+  data:
+    redis:
+      port: 6379
+      host: localhost
+      password: password
+      timeout: 1000
   datasource:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://localhost:5332/friend_db
@@ -17,7 +24,6 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
   liquibase:
     change-log: db/root-changelog.xml
-
   kafka:
     bootstrap-servers: localhost:9092
     template:

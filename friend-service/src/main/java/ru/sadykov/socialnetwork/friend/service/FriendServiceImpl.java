@@ -4,12 +4,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.sadykov.socialnetwork.friend.client.AuthClient;
 import ru.sadykov.socialnetwork.friend.entity.Friend;
 import ru.sadykov.socialnetwork.friend.entity.Status;
+import ru.sadykov.socialnetwork.entity.Users;
 import ru.sadykov.socialnetwork.friend.event.FriendAddEvent;
 import ru.sadykov.socialnetwork.friend.exception.InvalidRequestParameterException;
 import ru.sadykov.socialnetwork.friend.exception.UserNotFoundException;
@@ -26,7 +28,7 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = {@Lazy})
 public class FriendServiceImpl implements FriendService {
 
     private final FriendFinder friendFinder;
@@ -35,20 +37,29 @@ public class FriendServiceImpl implements FriendService {
     private final ResponseMessageHandler responseMessageHandler;
     private final FriendUpdater friendUpdater;
     private final KafkaTemplate<String, FriendAddEvent> kafkaTemplate;
+    private final RedisTemplate<String, Users> redisTemplate;
+
 
     private final LocalizationExceptionMessage localizationExceptionMessage;
     private final LocalizationResponseMessage localizationResponseMessage;
 
     private final AuthClient authClient;
 
-    private FriendServiceImpl friendServiceImpl;
+    @Lazy
+    private final FriendServiceImpl friendServiceImpl;
 
     @Override
     public FriendResponseDto addFriend(long userId, long subscriberId) {
-        boolean userExists = authClient.userIsExists(subscriberId);
-
         if (userId == subscriberId) {
             throw new InvalidRequestParameterException(localizationExceptionMessage.getAddYourselfExc());
+        }
+
+        Optional<Users> user = Optional.ofNullable(redisTemplate.opsForValue().get("UserService::getById::" + subscriberId));
+
+        boolean userExists = true;
+
+        if (user.isEmpty()) {
+            userExists = authClient.userIsExists(subscriberId);
         }
 
         if (!userExists) {
@@ -97,8 +108,13 @@ public class FriendServiceImpl implements FriendService {
         return new FriendResponseDto(message);
     }
 
-    @Autowired
-    public void setFriendServiceImpl(@Lazy FriendServiceImpl friendServiceImpl) {
-        this.friendServiceImpl = friendServiceImpl;
+    public Object getUserById(String userId) {
+        String userKey = "user:" + userId; // Формат ключа
+        return redisTemplate.opsForValue().get(userKey); // Получаем данные из кэша
     }
+
+//    @Autowired
+//    public void setFriendServiceImpl(@Lazy FriendServiceImpl friendServiceImpl) {
+//        this.friendServiceImpl = friendServiceImpl;
+//    }
 }

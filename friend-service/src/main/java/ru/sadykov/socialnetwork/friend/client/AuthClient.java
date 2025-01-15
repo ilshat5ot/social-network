@@ -5,6 +5,6 @@ import org.springframework.web.service.annotation.GetExchange;
 
 public interface AuthClient {
 
-    @GetExchange("/api/v1/auth/{userId}")
+    @GetExchange("http://localhost:8002/userExists/{userId}")
     boolean userIsExists(@PathVariable long userId);
 }
