@@ -2,6 +2,8 @@ package ru.sadykov.socialnetwork.friend.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,21 +40,25 @@ public class FriendServiceImpl implements FriendService {
     private final LocalizationResponseMessage localizationResponseMessage;
 
     private final AuthClient authClient;
+    private FriendServiceImpl friendServiceImpl;
 
     @Override
-    @Transactional
     public FriendResponseDto addFriend(long userId, long subscriberId) {
-
-        boolean userExists = authClient.userIsExists(subscriberId);
-
         if (userId == subscriberId) {
             throw new InvalidRequestParameterException(localizationExceptionMessage.getAddYourselfExc());
         }
+
+        boolean userExists = authClient.userIsExists(subscriberId);
 
         if (!userExists) {
             throw new UserNotFoundException(String.format(localizationExceptionMessage.getUserNotFound(), subscriberId));
         }
 
+        return friendServiceImpl.add(userId, subscriberId);
+    }
+
+    @Transactional
+    protected FriendResponseDto add(long userId, long subscriberId) {
         String message;
 
         Optional<Friend> friendOptional = friendFinder.findFriend(userId, subscriberId);
@@ -88,5 +94,10 @@ public class FriendServiceImpl implements FriendService {
         log.info("End - Sending AddFriendEvent {} to Kafka topic friendship-notification", addFriendEvent);
 
         return new FriendResponseDto(message);
+    }
+
+    @Autowired
+    public void setFriendServiceImpl(@Lazy FriendServiceImpl friendServiceImpl) {
+        this.friendServiceImpl = friendServiceImpl;
     }
 }
